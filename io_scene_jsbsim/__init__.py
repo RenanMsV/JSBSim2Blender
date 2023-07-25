@@ -140,14 +140,23 @@ class JSBSim:
         self.parse_external_reactions()
         self.parse_propulsion()
 
+    def get_tag_if_exists(self, tag_name, collection_name):
+        self.get_collection(collection_name)
+        tag = self.root.find(tag_name)
+        if tag == None:
+            print("JSBSim warning: Missing tag [", tag_name, "]")
+        return tag
+
     def parse_metrics(self):
-        metrics = self.root.find("metrics")
+        metrics = self.get_tag_if_exists("metrics", "Metrics")
+        if metrics == None: return
         locations = self.get_locations(metrics)
         for _, location in locations.items():
             self.plot(location["name"], location["xyz"], "Metrics")
 
     def parse_mass_balance(self):
-        mass_balances = self.root.find("mass_balance")
+        mass_balances = self.get_tag_if_exists("mass_balance", "Mass Balance")
+        if mass_balances == None: return
         for _, location in self.get_locations(mass_balances).items(): 
             self.plot(location["name"], location["xyz"], "Mass Balance") # get and plot CG
         for pointmass in mass_balances.findall("pointmass"):
@@ -159,7 +168,8 @@ class JSBSim:
                 self.plot(f"{pointmass_name} ({location['name']} - {weight} {weight_unit})", location["xyz"], "Mass Balance")
 
     def parse_ground_reactions(self):
-        ground_reactions = self.root.find("ground_reactions")
+        ground_reactions = self.get_tag_if_exists("ground_reactions", "Ground Reactions")
+        if ground_reactions == None: return
         for contact in ground_reactions.findall("contact"):
             contact_name = contact.get("name")
             contact_type = contact.get("type")
@@ -168,7 +178,8 @@ class JSBSim:
                 self.plot(f"{contact_name} ({contact_type})", location["xyz"], "Ground Reactions")
 
     def parse_external_reactions(self):
-        external_reactions = self.root.find("external_reactions")
+        external_reactions = self.get_tag_if_exists("external_reactions", "External Reactions")
+        if external_reactions == None: return
         for force in external_reactions.findall("force"):
             force_name = force.get("name")
             force_frame = force.get("frame")
@@ -177,7 +188,8 @@ class JSBSim:
                 self.plot(f"{force_name} ({force_frame})", location["xyz"], "External Reactions")
 
     def parse_propulsion(self):
-        propulsions = self.root.find("propulsion")
+        propulsions = self.get_tag_if_exists("propulsion", "Propulsion")
+        if propulsions == None: return
         for engine in propulsions.findall("engine"):
             engine_file = engine.get("file")
             locations = self.get_locations(engine)
