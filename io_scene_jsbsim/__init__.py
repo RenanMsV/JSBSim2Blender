@@ -19,7 +19,7 @@
 bl_info = {
     "name": "JSBSim to Blender",
     "author": "RenanMsV",
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "blender": (2, 80, 0),
     "location": "File > Import",
     "description": "Load and visualize aircraft FDM metrics from JSBSim XML files inside Blender",
