@@ -133,19 +133,19 @@ class JSBSim:
         else:
             return value * scale
 
-    def begin_parsing(self):
-        self.parse_metrics()
-        self.parse_mass_balance()
-        self.parse_ground_reactions()
-        self.parse_external_reactions()
-        self.parse_propulsion()
-
     def get_tag_if_exists(self, tag_name, collection_name):
         self.get_collection(collection_name)
         tag = self.root.find(tag_name)
         if tag == None:
             print("JSBSim warning: Missing tag [", tag_name, "]")
         return tag
+
+    def begin_parsing(self):
+        self.parse_metrics()
+        self.parse_mass_balance()
+        self.parse_ground_reactions()
+        self.parse_external_reactions()
+        self.parse_propulsion()
 
     def parse_metrics(self):
         metrics = self.get_tag_if_exists("metrics", "Metrics")
