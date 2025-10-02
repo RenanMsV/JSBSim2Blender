@@ -24,13 +24,16 @@ import time
 
 class JSBSim:
     def __init__(self, filepath):
-        print("Importing JSBSim FDM from file:", filepath)
         self.filepath = filepath
         self.filename = path.basename(filepath).split('.xml')[0]
         self.root = ET.parse(filepath).getroot()
         self.unique_id, self.collection = self.get_root_collection_and_id()
         self.unit_system, self.unit_scale_length, self.unit_rotation_mode = self.get_unit_system()
+        self.elapsed_start_import = time.perf_counter()
         self.begin_parsing()
+        self.elapsed_finish_import = time.perf_counter()
+        self.elapsed_import_ms = (self.elapsed_finish_import - self.elapsed_start_import) * 1000
+        print(f'Imported JSBSim FDM from file: {filepath} in {self.elapsed_import_ms :.3f} ms')
     
     def plot(self, name, position, collection_name, mesh_type = "SPHERE"):
         bpy.ops.object.empty_add(type = mesh_type, location = position)
