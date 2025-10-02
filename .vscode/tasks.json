@@ -1,0 +1,26 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Addon",
+            "type": "shell",
+            // Assuming Blender is in PATH. Default Windows location is
+            // "C:\Program Files\Blender Foundation\Blender {version}"
+            "command": "blender",
+            "args": [
+                "--command",
+                "extension",
+                "build",
+                "--source-dir",
+                "io_scene_jsbsim"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
