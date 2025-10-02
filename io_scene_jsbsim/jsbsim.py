@@ -110,17 +110,16 @@ class JSBSim:
         return result
     
     def convert_unit(self, value, unit_from):
-        scale = 1
-        if unit_from == "IN":
-            scale = 0.0254
-        elif unit_from == "FT":
-            scale = 0.3048
-        elif unit_from == "M":
-            pass
-        if self.unit_scale_length == scale:
-            return value
-        else:
-            return value * scale
+        scales = {
+            'IN': 0.0254,
+            'FT': 0.3048,
+            'M': 1.0,
+        }
+        if unit_from not in scales:
+            raise ValueError(f'Unsupported unit: {unit_from}')
+        scale = scales[unit_from]
+        # Convert to meters, then into Blender scene units
+        return (value * scale) / self.unit_scale_length
 
     def get_tag_if_exists(self, tag_name, collection_name):
         self.get_collection(collection_name)
