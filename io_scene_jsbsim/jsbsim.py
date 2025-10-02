@@ -128,7 +128,7 @@ class JSBSim:
             print("JSBSim warning: Missing tag [", tag_name, "]")
         return tag
     
-    def set_object_parent(self, object, parent_object, keep_global_transform: False):
+    def set_object_parent(self, object, parent_object, keep_global_transform = False):
         object.parent = parent_object
         if keep_global_transform:
             object.matrix_parent_inverse = parent_object.matrix_world.inverted()
