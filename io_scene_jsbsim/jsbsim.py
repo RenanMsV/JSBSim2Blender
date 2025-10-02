@@ -127,6 +127,11 @@ class JSBSim:
         if tag == None:
             print("JSBSim warning: Missing tag [", tag_name, "]")
         return tag
+    
+    def set_object_parent(self, object, parent_object, keep_global_transform: False):
+        object.parent = parent_object
+        if keep_global_transform:
+            object.matrix_parent_inverse = parent_object.matrix_world.inverted()
 
     def begin_parsing(self):
         self.parse_metrics()
@@ -176,25 +181,31 @@ class JSBSim:
                 self.plot(f"{force_name} ({force_frame})", location["xyz"], "External Reactions")
 
     def parse_propulsion(self):
-        propulsions = self.get_tag_if_exists("propulsion", "Propulsion")
+        propulsions = self.get_tag_if_exists('propulsion', 'Propulsion')
         if propulsions == None: return
-        for engine in propulsions.findall("engine"):
-            engine_file = engine.get("file")
+        # Draw engines
+        for engine in propulsions.findall('engine'):
+            engine_file = engine.get('file')
             locations = self.get_locations(engine)
             engine_object = None
-            for _, location in locations.items():
-                engine_object = self.plot(f"ENGINE - {engine_file}", location["xyz"], "Propulsion", "CONE")
-                thruster = engine.find("thruster")
-                thruster_file = thruster.get("file")
-                locations = self.get_locations(thruster)
+            if len(locations):
                 for _, location in locations.items():
-                    thruster_object = self.plot(f"THRUSTER - {thruster_file}", location["xyz"], "Propulsion")
-                    thruster_object.parent = engine_object
-        for tank in propulsions.findall("tank"):
-            tank_type = tank.get("type")
-            tank_number = tank.get("number")
-            locations = self.get_locations(tank)
-            capacity_unit = tank.find("capacity").get("unit")
-            capacity = tank.find("capacity").text.strip()
+                    engine_object = self.plot(f'ENGINE - {engine_file}', location['xyz'], 'Propulsion', 'CONE')
+            else:
+                engine_object = self.plot(f'ENGINE - {engine_file} (missing location)', (0, 0, 0), 'Propulsion', 'CONE')
+            # Draw engine thrusters
+            thruster = engine.find('thruster')
+            thruster_file = thruster.get('file')
+            locations = self.get_locations(thruster)
             for _, location in locations.items():
-                self.plot(f"TANK ({tank_number} - {tank_type} - {capacity} {capacity_unit})", location["xyz"], "Propulsion", "CUBE")
+                thruster_object = self.plot(f'THRUSTER - {thruster_file}', location['xyz'], 'Propulsion')
+                self.set_object_parent(object=thruster_object, parent_object=engine_object, keep_global_transform=True)
+        # Draw fuel tanks
+        for tank in propulsions.findall('tank'):
+            tank_type = tank.get('type')
+            tank_number = tank.get('number')
+            locations = self.get_locations(tank)
+            capacity_unit = tank.find('capacity').get('unit')
+            capacity = tank.find('capacity').text.strip()
+            for _, location in locations.items():
+                self.plot(f'TANK ({tank_number} - {tank_type} - {capacity} {capacity_unit})', location['xyz'], 'Propulsion', 'CUBE')
