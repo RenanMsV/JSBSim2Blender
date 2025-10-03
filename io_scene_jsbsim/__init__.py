@@ -16,13 +16,13 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
-import bpy
+from bpy.utils import register_class, unregister_class
 from bpy_extras.io_utils import ImportHelper
-from bpy.types import Operator
+from bpy.types import Operator, TOPBAR_MT_file_import
 from bpy.props import StringProperty, FloatProperty, BoolProperty
 
 from .jsbsim import JSBSim
+
 
 class ImportJSBSim(Operator, ImportHelper):
     bl_idname = 'import_scene.jsbsim'
@@ -31,71 +31,74 @@ class ImportJSBSim(Operator, ImportHelper):
     bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
     filename_ext = '.xml'
-    filter_glob: StringProperty(default="*.xml", options={'HIDDEN'}) # type: ignore
+    filter_glob: StringProperty(
+        default='*.xml',        # noqa: F722
+        options={'HIDDEN'}      # noqa: F821
+    )  # type: ignore
 
     # Per import settings
     plot_scale: FloatProperty(
-        name='Scale factor',
-        description='Controls the size of plotted objects',
+        name='Scale factor',                                    # noqa: F722
+        description='Controls the size of plotted objects',     # noqa: F722
         default=0.25,
         min=0.01,
         max=10.0
-    ) # type: ignore
+    )  # type: ignore
 
     plot_names: BoolProperty(
-        name="Show names",
-        description="Display plotted object names in the viewport",
+        name='Show names',                                              # noqa: F722
+        description='Display plotted object names in the viewport',     # noqa: F722
         default=False
-    ) # type: ignore
+    )  # type: ignore
 
     plot_axes: BoolProperty(
-        name="Show axes",
-        description="Display local axes of plotted objects in the viewport",
+        name='Show axes',                                               # noqa: F722
+        description='Display axes of plotted objects in the viewport',  # noqa: F722
         default=False
-    ) # type: ignore
+    )  # type: ignore
 
     thrs_auto_parent: BoolProperty(
-        name='Thrusters',
-        description='Automatically parent Thrusters to their Engines',
+        name='Thrusters',                                               # noqa: F821
+        description='Automatically parent Thrusters to their Engines',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     include_metrics: BoolProperty(
-        name='Metrics',
-        description='Select this to include it when importing',
+        name='Metrics',                                          # noqa: F821
+        description='Select this to include it when importing',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     include_mass_balance: BoolProperty(
-        name='Mass Balance',
-        description='Select this to include it when importing',
+        name='Mass Balance',                                     # noqa: F722
+        description='Select this to include it when importing',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     include_ground_reactions: BoolProperty(
-        name='Ground Reactions',
-        description='Select this to include it when importing',
+        name='Ground Reactions',                                 # noqa: F722
+        description='Select this to include it when importing',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     include_external_reactions: BoolProperty(
-        name='External Reactions',
-        description='Select this to include it when importing',
+        name='External Reactions',                               # noqa: F722
+        description='Select this to include it when importing',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     include_propulsion: BoolProperty(
-        name='Propulsion',
-        description='Select this to include it when importing',
+        name='Propulsion',                                       # noqa: F821
+        description='Select this to include it when importing',  # noqa: F722
         default=True
-    ) # type: ignore
+    )  # type: ignore
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
 
         def draw_props_panel(panel_id, label_text, props):
-            """Draw a collapsible settings panel for operator properties."""
+            '''Draw a collapsible settings panel for operator properties.'''
             header, body = layout.panel(panel_id, default_closed=False)
             header.label(text=label_text)
             if body:
@@ -104,29 +107,29 @@ class ImportJSBSim(Operator, ImportHelper):
 
         panels = [
             (
-                "JSBSim_FDM_import_include",
-                "Include",
+                'JSBSim_FDM_import_include',
+                'Include',
                 [
-                    "include_metrics",
-                    "include_mass_balance",
-                    "include_ground_reactions",
-                    "include_external_reactions",
-                    "include_propulsion"
+                    'include_metrics',
+                    'include_mass_balance',
+                    'include_ground_reactions',
+                    'include_external_reactions',
+                    'include_propulsion'
                 ]
             ),
             (
-                "JSBSim_FDM_import_plot_objects",
-                "Plotted Objects",
+                'JSBSim_FDM_import_plot_objects',
+                'Plotted Objects',
                 [
-                    "plot_scale",
-                    "plot_names",
-                    "plot_axes"
+                    'plot_scale',
+                    'plot_names',
+                    'plot_axes'
                 ]
             ),
             (
-                "JSBSim_FDM_import_parenting",
-                "Parenting",
-                ["thrs_auto_parent"]
+                'JSBSim_FDM_import_parenting',
+                'Parenting',
+                ['thrs_auto_parent']
             )
         ]
 
@@ -134,30 +137,36 @@ class ImportJSBSim(Operator, ImportHelper):
             draw_props_panel(panel_id, label, props)
 
     def execute(self, context):
-        if not self.filepath or not self.filepath.lower().endswith(".xml"):
-            self.report({'ERROR'}, "Please select a valid XML file")
+        if not self.filepath or not self.filepath.lower().endswith('.xml'):
+            self.report({'ERROR'}, 'Please select a valid XML file')
             return {'CANCELLED'}
         settings = {
-            "plot_scale": self.plot_scale,
-            "plot_names": self.plot_names,
-            "plot_axes": self.plot_axes,
-            "thrs_auto_parent": self.thrs_auto_parent,
-            "include_metrics": self.include_metrics,
-            "include_mass_balance": self.include_mass_balance,
-            "include_ground_reactions": self.include_ground_reactions,
-            "include_external_reactions": self.include_external_reactions,
-            "include_propulsion": self.include_propulsion
+            'plot_scale': self.plot_scale,
+            'plot_names': self.plot_names,
+            'plot_axes': self.plot_axes,
+            'thrs_auto_parent': self.thrs_auto_parent,
+            'include_metrics': self.include_metrics,
+            'include_mass_balance': self.include_mass_balance,
+            'include_ground_reactions': self.include_ground_reactions,
+            'include_external_reactions': self.include_external_reactions,
+            'include_propulsion': self.include_propulsion
         }
-        self.jsbInstance = JSBSim(self.filepath, **settings)  # init import operator instance
+        self.jsbInstance = JSBSim(self.filepath, **settings)  # init import operator
         return {'FINISHED'}
 
+
 def menu_func_import(self, context):
-    self.layout.operator(ImportJSBSim.bl_idname, text='JSBSim Flight Dynamics Model (.xml)')
+    self.layout.operator(
+        ImportJSBSim.bl_idname,
+        text='JSBSim Flight Dynamics Model (.xml)'
+    )
+
 
 def register():
-    bpy.utils.register_class(ImportJSBSim)
-    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    register_class(ImportJSBSim)
+    TOPBAR_MT_file_import.append(menu_func_import)
+
 
 def unregister():
-    bpy.utils.unregister_class(ImportJSBSim)
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    unregister_class(ImportJSBSim)
+    TOPBAR_MT_file_import.remove(menu_func_import)
