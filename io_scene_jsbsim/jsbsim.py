@@ -16,11 +16,11 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
 import bpy
 import xml.etree.ElementTree as ET
 from os import path
 import time
+
 
 class JSBSim:
     def __init__(
@@ -51,22 +51,32 @@ class JSBSim:
         # Parse, display and benchmark
         self.root = ET.parse(filepath).getroot()
         self.unique_id, self.collection = self.get_root_collection_and_id()
-        self.unit_system, self.unit_scale_length, self.unit_rotation_mode = self.get_unit_system()
+        (
+            self.unit_system,
+            self.unit_scale_length,
+            self.unit_rotation_mode,
+        ) = self.get_unit_system()
         self.elapsed_start_import = time.perf_counter()
         self.begin_parsing()
         self.elapsed_finish_import = time.perf_counter()
-        self.elapsed_import_ms = (self.elapsed_finish_import - self.elapsed_start_import) * 1000
-        print(f'Imported JSBSim FDM from file: {filepath} in {self.elapsed_import_ms :.3f} ms')
-    
-    def plot(self, name, position, collection_name, mesh_type = "SPHERE"):
-        bpy.ops.object.empty_add(type = mesh_type, location = position)
+        self.elapsed_import_ms = (
+            self.elapsed_finish_import - self.elapsed_start_import
+        ) * 1000
+        print(
+            f'Imported JSBSim FDM from file: {filepath} '
+            f'in {self.elapsed_import_ms:.3f} ms'
+        )
+
+    def plot(self, name, position, collection_name, mesh_type='SPHERE'):
+        bpy.ops.object.empty_add(type=mesh_type, location=position)
         active_object = bpy.context.active_object
-        active_object.name = f"{name} - {self.unique_id}"
+        active_object.name = f'{name} - {self.unique_id}'
         active_object.scale = (self.plot_scale, self.plot_scale, self.plot_scale)
         active_object.show_name = self.plot_names
         active_object.show_axis = self.plot_axes
-        # cone must be pointing forward. later it could point to the actual orientation of the engine
-        if mesh_type == "CONE":
+        # cone must be pointing forward. later it could point to the
+        # actual orientation of the engine
+        if mesh_type == 'CONE':
             active_object.rotation_euler = (0, 0, 1.5707963267948966)
         active_object.users_collection[0].objects.unlink(active_object)
         collection = self.get_collection(collection_name)
@@ -76,32 +86,37 @@ class JSBSim:
     def get_unit_system(self):
         scene = bpy.context.scene
         unit_settings = scene.unit_settings
-        return unit_settings.system, unit_settings.scale_length, unit_settings.system_rotation
+        return (
+            unit_settings.system,
+            unit_settings.scale_length,
+            unit_settings.system_rotation
+        )
 
     def get_root_collection_and_id(self):
         scene_collection = bpy.context.scene.collection
         children = scene_collection.children
         target_collection_name = None
         unique_id = None
+
         def find_children(name, children):
             for child in children:
                 if child.name == name:
                     return child
             return None
         for index in range(999):
-            name = f"JSBSim - [{self.filename} ({index})]"
+            name = f'JSBSim - [{self.filename} ({index})]'
             if find_children(name, children):
                 continue
             else:
                 target_collection_name = name
-                unique_id = f"[{self.filename} ({index})]"
+                unique_id = f'[{self.filename} ({index})]'
                 break
         new_collection = bpy.data.collections.new(target_collection_name)
         scene_collection.children.link(new_collection)
         return unique_id, new_collection
 
     def get_collection(self, name):
-        target_collection_name = f"{name} - {self.unique_id}"
+        target_collection_name = f'{name} - {self.unique_id}'
         target_collection = None
         for collection in self.collection.children:
             if collection.name == target_collection_name:
@@ -130,10 +145,14 @@ class JSBSim:
             x = self.convert_unit(x, unit)
             y = self.convert_unit(y, unit)
             z = self.convert_unit(z, unit)
-            result[f"{name} ({str(index)})"] = {"name": name, "unit": unit, "xyz": (x, y, z)}
+            result[f'{name} ({str(index)})'] = {
+                'name': name,
+                'unit': unit,
+                'xyz': (x, y, z)
+            }
             index += 1
         return result
-    
+
     def convert_unit(self, value, unit_from):
         scales = {
             'IN': 0.0254,
@@ -149,11 +168,11 @@ class JSBSim:
     def get_tag_if_exists(self, tag_name, collection_name):
         self.get_collection(collection_name)
         tag = self.root.find(tag_name)
-        if tag == None:
-            print("JSBSim warning: Missing tag [", tag_name, "]")
+        if tag is None:
+            print('JSBSim warning: Missing tag [', tag_name, ']')
         return tag
-    
-    def set_object_parent(self, object, parent_object, keep_global_transform = False):
+
+    def set_object_parent(self, object, parent_object, keep_global_transform=False):
         object.parent = parent_object
         if keep_global_transform:
             object.matrix_parent_inverse = parent_object.matrix_world.inverted()
@@ -171,48 +190,74 @@ class JSBSim:
             self.parse_propulsion()
 
     def parse_metrics(self):
-        metrics = self.get_tag_if_exists("metrics", "Metrics")
-        if metrics == None: return
+        metrics = self.get_tag_if_exists('metrics', 'Metrics')
+        if metrics is None:
+            return
         locations = self.get_locations(metrics)
         for _, location in locations.items():
-            self.plot(location["name"], location["xyz"], "Metrics")
+            self.plot(location['name'], location['xyz'], 'Metrics')
 
     def parse_mass_balance(self):
-        mass_balances = self.get_tag_if_exists("mass_balance", "Mass Balance")
-        if mass_balances == None: return
-        for _, location in self.get_locations(mass_balances).items(): 
-            self.plot(location["name"], location["xyz"], "Mass Balance") # get and plot CG
-        for pointmass in mass_balances.findall("pointmass"):
-            pointmass_name = pointmass.get("name")
-            weight_unit = pointmass.find("weight").get("unit")
-            weight = pointmass.find("weight").text.strip()
+        mass_balances = self.get_tag_if_exists('mass_balance', 'Mass Balance')
+        if mass_balances is None:
+            return
+        for _, location in self.get_locations(mass_balances).items():
+            self.plot(
+                location['name'],
+                location['xyz'],
+                'Mass Balance'
+            )  # get and plot CG
+        for pointmass in mass_balances.findall('pointmass'):
+            pointmass_name = pointmass.get('name')
+            weight_unit = pointmass.find('weight').get('unit')
+            weight = pointmass.find('weight').text.strip()
             locations = self.get_locations(pointmass)
             for _, location in locations.items():
-                self.plot(f"{pointmass_name} ({location['name']} - {weight} {weight_unit})", location["xyz"], "Mass Balance")
+                self.plot(
+                    f"{pointmass_name} ({location['name']} - {weight} {weight_unit})",
+                    location['xyz'],
+                    'Mass Balance'
+                )
 
     def parse_ground_reactions(self):
-        ground_reactions = self.get_tag_if_exists("ground_reactions", "Ground Reactions")
-        if ground_reactions == None: return
-        for contact in ground_reactions.findall("contact"):
-            contact_name = contact.get("name")
-            contact_type = contact.get("type")
+        ground_reactions = self.get_tag_if_exists(
+            'ground_reactions',
+            'Ground Reactions'
+        )
+        if ground_reactions is None:
+            return
+        for contact in ground_reactions.findall('contact'):
+            contact_name = contact.get('name')
+            contact_type = contact.get('type')
             locations = self.get_locations(contact)
             for _, location in locations.items():
-                self.plot(f"{contact_name} ({contact_type})", location["xyz"], "Ground Reactions")
+                self.plot(
+                    f'{contact_name} ({contact_type})',
+                    location['xyz'],
+                    'Ground Reactions'
+                )
 
     def parse_external_reactions(self):
-        external_reactions = self.get_tag_if_exists("external_reactions", "External Reactions")
-        if external_reactions == None: return
-        for force in external_reactions.findall("force"):
-            force_name = force.get("name")
-            force_frame = force.get("frame")
+        external_reactions = self.get_tag_if_exists(
+            'external_reactions', 'External Reactions'
+        )
+        if external_reactions is None:
+            return
+        for force in external_reactions.findall('force'):
+            force_name = force.get('name')
+            force_frame = force.get('frame')
             locations = self.get_locations(force)
             for _, location in locations.items():
-                self.plot(f"{force_name} ({force_frame})", location["xyz"], "External Reactions")
+                self.plot(
+                    f'{force_name} ({force_frame})',
+                    location['xyz'],
+                    'External Reactions'
+                )
 
     def parse_propulsion(self):
         propulsions = self.get_tag_if_exists('propulsion', 'Propulsion')
-        if propulsions == None: return
+        if propulsions is None:
+            return
         # Draw engines
         for engine in propulsions.findall('engine'):
             engine_file = engine.get('file')
@@ -220,15 +265,29 @@ class JSBSim:
             engine_object = None
             if len(locations):
                 for _, location in locations.items():
-                    engine_object = self.plot(f'ENGINE - {engine_file}', location['xyz'], 'Propulsion', 'CONE')
+                    engine_object = self.plot(
+                        f'ENGINE - {engine_file}',
+                        location['xyz'],
+                        'Propulsion',
+                        'CONE'
+                    )
             else:
-                engine_object = self.plot(f'ENGINE - {engine_file} (missing location)', (0, 0, 0), 'Propulsion', 'CONE')
+                engine_object = self.plot(
+                    f'ENGINE - {engine_file} (missing location)',
+                    (0, 0, 0),
+                    'Propulsion',
+                    'CONE'
+                )
             # Draw engine thrusters
             thruster = engine.find('thruster')
             thruster_file = thruster.get('file')
             locations = self.get_locations(thruster)
             for _, location in locations.items():
-                thruster_object = self.plot(f'THRUSTER - {thruster_file}', location['xyz'], 'Propulsion')
+                thruster_object = self.plot(
+                    f'THRUSTER - {thruster_file}',
+                    location['xyz'],
+                    'Propulsion'
+                )
                 if self.thrs_auto_parent:
                     self.set_object_parent(
                         object=thruster_object,
@@ -243,4 +302,9 @@ class JSBSim:
             capacity_unit = tank.find('capacity').get('unit')
             capacity = tank.find('capacity').text.strip()
             for _, location in locations.items():
-                self.plot(f'TANK ({tank_number} - {tank_type} - {capacity} {capacity_unit})', location['xyz'], 'Propulsion', 'CUBE')
+                self.plot(
+                    f'TANK ({tank_number} - {tank_type} - {capacity} {capacity_unit})',
+                    location['xyz'],
+                    'Propulsion',
+                    'CUBE'
+                )
