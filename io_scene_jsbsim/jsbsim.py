@@ -23,9 +23,32 @@ from os import path
 import time
 
 class JSBSim:
-    def __init__(self, filepath):
+    def __init__(
+        self,
+        filepath,
+        plot_scale,
+        plot_names,
+        plot_axes,
+        thrs_auto_parent,
+        include_metrics,
+        include_mass_balance,
+        include_ground_reactions,
+        include_external_reactions,
+        include_propulsion
+    ):
         self.filepath = filepath
         self.filename = path.basename(filepath).split('.xml')[0]
+        # Collect import operator settings
+        self.plot_scale = plot_scale
+        self.plot_names = plot_names
+        self.plot_axes = plot_axes
+        self.thrs_auto_parent = thrs_auto_parent
+        self.include_metrics = include_metrics
+        self.include_mass_balance = include_mass_balance
+        self.include_ground_reactions = include_ground_reactions
+        self.include_external_reactions = include_external_reactions
+        self.include_propulsion = include_propulsion
+        # Parse, display and benchmark
         self.root = ET.parse(filepath).getroot()
         self.unique_id, self.collection = self.get_root_collection_and_id()
         self.unit_system, self.unit_scale_length, self.unit_rotation_mode = self.get_unit_system()
@@ -39,7 +62,9 @@ class JSBSim:
         bpy.ops.object.empty_add(type = mesh_type, location = position)
         active_object = bpy.context.active_object
         active_object.name = f"{name} - {self.unique_id}"
-        active_object.scale = (0.25, 0.25, 0.25)
+        active_object.scale = (self.plot_scale, self.plot_scale, self.plot_scale)
+        active_object.show_name = self.plot_names
+        active_object.show_axis = self.plot_axes
         # cone must be pointing forward. later it could point to the actual orientation of the engine
         if mesh_type == "CONE":
             active_object.rotation_euler = (0, 0, 1.5707963267948966)
@@ -134,11 +159,16 @@ class JSBSim:
             object.matrix_parent_inverse = parent_object.matrix_world.inverted()
 
     def begin_parsing(self):
-        self.parse_metrics()
-        self.parse_mass_balance()
-        self.parse_ground_reactions()
-        self.parse_external_reactions()
-        self.parse_propulsion()
+        if self.include_metrics:
+            self.parse_metrics()
+        if self.include_mass_balance:
+            self.parse_mass_balance()
+        if self.include_ground_reactions:
+            self.parse_ground_reactions()
+        if self.include_external_reactions:
+            self.parse_external_reactions()
+        if self.include_propulsion:
+            self.parse_propulsion()
 
     def parse_metrics(self):
         metrics = self.get_tag_if_exists("metrics", "Metrics")
@@ -199,7 +229,12 @@ class JSBSim:
             locations = self.get_locations(thruster)
             for _, location in locations.items():
                 thruster_object = self.plot(f'THRUSTER - {thruster_file}', location['xyz'], 'Propulsion')
-                self.set_object_parent(object=thruster_object, parent_object=engine_object, keep_global_transform=True)
+                if self.thrs_auto_parent:
+                    self.set_object_parent(
+                        object=thruster_object,
+                        parent_object=engine_object,
+                        keep_global_transform=True
+                    )
         # Draw fuel tanks
         for tank in propulsions.findall('tank'):
             tank_type = tank.get('type')
