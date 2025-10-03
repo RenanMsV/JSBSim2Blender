@@ -25,10 +25,10 @@ To maintain consistency across the project, please adhere to the following codin
 
 **1. Command-line installation (cross-platform):**
 
-```bash
-pip install flake8
-flake8 .
-```
+   ```bash
+   pip install flake8
+   flake8 .
+   ```
 
 **2. Using VS Code (simplest for most contributors):**
 
@@ -44,10 +44,15 @@ flake8 .
 When submitting a pull request (PR):
 
 1. **Fork the Repository**: Create a fork of this repository.
-2. **Create a Branch**: Make your changes in a new branch, not directly in `main`.
-3. **Commit Changes**: Write clear and concise commit messages.
-4. **Push Changes**: Push your changes to your forked repository.
-5. **Open a Pull Request**: Submit a PR from your branch to our `main` branch.
+2. (Optional but recommended) Install `fake-bpy-module-latest` in your python virtual environment to get **code completion and highlighting** for Blender's Python API:
+
+   ```bash
+   pip install fake-bpy-module-latest
+   ```
+3. **Create a Branch**: Make your changes in a new branch, not directly in `main`.
+4. **Commit Changes**: Write clear and concise commit messages.
+5. **Push Changes**: Push your changes to your forked repository.
+6. **Open a Pull Request**: Submit a PR from your branch to our `main` branch.
 
 Please ensure your PR:
 
@@ -57,27 +62,23 @@ Please ensure your PR:
 
 ---
 
-## Reporting Issues
-
-If you find a bug or have a question:
-
-- **Search Existing Issues**: Before creating a new issue, check if it has already been reported.
-- **Provide Details**: Include steps to reproduce the issue, your environment details (e.g., Blender version, operating system), and any relevant logs or screenshots.
-
 ## Building the Extension
 
 If you are making code changes and want to test or package the extension:
 
 1. **Install Blender** and make sure it is available in your system `PATH`.
 2. Open the project in **VS Code**.
-3. (Optional but recommended) Install `fake-bpy-module-latest` in your project virtual environment to get **code completion and highlighting** for Blender's Python API:
-
-   ```bash
-   pip install fake-bpy-module-latest
-   ```
-
-4. Use the included VSCode **Build Addon** task:
+3. Use the included VSCode **Build Addon** task:
    - Press `Ctrl+Shift+B` (Windows/Linux) or `Cmd+Shift+B` (Mac) to run the default build task.
    - This will call Blender to package the extension automatically.
-5. The packaged extension `.zip` file will be generated in the **current project directory**.
-6. You can then install this `.zip` extension in Blender to test your changes.
+4. The packaged extension `.zip` file will be generated in the **current project directory**.
+5. You can then install this `.zip` extension in Blender to test your changes.
+
+---
+
+## Reporting Issues
+
+If you find a bug or have a question:
+
+- **Search Existing Issues**: Before creating a new issue, check if it has already been reported.
+- **Provide Details**: Include steps to reproduce the issue, your environment details (e.g., Blender version, operating system), and any relevant logs or screenshots.
