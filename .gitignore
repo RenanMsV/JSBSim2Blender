@@ -3,3 +3,9 @@
 
 # Zip files
 *.zip
+
+# Github Local Actions
+.input
+.vars
+.secrets
+payload.json
