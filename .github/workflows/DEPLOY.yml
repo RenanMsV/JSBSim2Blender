@@ -1,0 +1,91 @@
+name: DEPLOY # Package, release, publish
+
+on:
+  workflow_dispatch:   # allows manual trigger
+  push:
+    branches:
+      - main           # runs only after code is merged into main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: PROD
+    # Run only if commit message starts with "release:"
+    # Or manually run
+    if: >
+      ${{ github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.head_commit.message, 'release:') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Read manifest and package extension
+        run: |
+          EXT_VERSION=$(grep -E '^version\s*=' ${{ vars.EXTENSION_SRC }}/blender_manifest.toml \
+              | sed -E 's/^version\s*=\s*"(.*)"/\1/' \
+              | tr -d '\r\n')
+          EXT_ID=$(grep -E '^id\s*=' "${{ vars.EXTENSION_SRC }}/blender_manifest.toml" \
+              | sed -E 's/^id\s*=\s*"(.*)"/\1/' \
+              | tr -d '\r\n')
+
+          ZIP_NAME="$EXT_ID-$EXT_VERSION.zip"
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          RELEASE_TAG_NAME="v${EXT_VERSION}"
+
+          zip -r "$ZIP_NAME" ${{ vars.EXTENSION_SRC }}
+
+          SHA256=$(sha256sum "$ZIP_NAME" | awk '{ print $1 }')
+
+          echo "Got version: $EXT_VERSION"
+          echo "Got id: $EXT_ID"
+          echo "Packaged as: $ZIP_NAME"
+          echo "SHA256: $SHA256"
+          echo "TAG: $RELEASE_TAG_NAME"
+          
+          echo "ext_version=$EXT_VERSION" >> $GITHUB_ENV
+          echo "ext_id=$EXT_ID" >> $GITHUB_ENV
+          echo "ext_zip_name=$ZIP_NAME" >> $GITHUB_ENV
+          echo "commit_hash=$COMMIT_HASH" >> $GITHUB_ENV
+          echo "release_tag_name=$RELEASE_TAG_NAME" >> $GITHUB_ENV
+          echo "sha256=$SHA256" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.release_tag_name }}
+          name: "Release ${{ env.release_tag_name }}"
+          body: |
+            🚀 Automatic release for version **${{ env.ext_version }}**
+            🔖 Commit: `${{ env.commit_hash }}`
+
+            **SHA-256 checksum:** `${{ env.sha256 }}`
+
+          draft: false
+          prerelease: false
+          files: ${{ env.ext_zip_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # # Steps below require acceptance to the Blender Extensions platform.
+      # # Once accepted they can be enabled to run
+      # - name: Get release notes
+      #   id: get_release_notes
+      #   run: |
+      #     release_notes=$(gh release view ${{ env.release_tag_name }} --json body --jq '.body' | sed -n '/\*\*SHA-256 checksum:\*\*/,$p' | tail -n +2)
+          
+      #     echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+      #     echo "$release_notes" >> $GITHUB_ENV
+      #     echo "EOF" >> $GITHUB_ENV
+
+      #     echo "$release_notes"
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+    
+      # - name: Deploy to Blender Extensions Platform
+      #   run: |
+      #     curl -X POST https://extensions.blender.org/api/v1/extensions/${{ env.EXT_ID }}/versions/upload/ \
+      #       -H "Authorization:bearer ${{ secrets.BLENDER_EXTENSIONS_TOKEN }}" \
+      #       -F "version_file=@$ZIP_NAME" \
+      #       --form-string "release_notes=${{ env.RELEASE_NOTES }}"
