@@ -1,15 +1,15 @@
 schema_version = "1.0.0"
 
-id = "jsbsim_to_blender"
-version = "0.0.2"
-name = "JSBSim to Blender"
-tagline = "Import and visualize JSBSim FDM aircraft XML metrics in Blender"
-maintainer = "RenanMsV"
+id = "io_scene_jsbsim"
+version = "0.2.0"
+name = "JSBSim Viewer"
+tagline = "Import and visualize JSBSim FDM aircraft XML metrics"
+maintainer = "RenanMsV <r.delaneza@gmail.com>"
 # Supported types: "add-on", "theme"
 type = "add-on"
 
 # # Optional: link to documentation, support, source files, etc
-website = "https://github.com/RenanMsV/JSBSim2Blender"
+website = "https://github.com/RenanMsV/JSBSim-Viewer"
 
 # # Optional: tag list defined by Blender and server, see:
 # # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
@@ -18,7 +18,7 @@ tags = ["Import-Export", "Scene", "3D View"]
 blender_version_min = "4.2.0"
 # # Optional: Blender version that the extension does not support, earlier versions are supported.
 # # This can be omitted and defined later on the extensions platform if an issue is found.
-# blender_version_max = "5.1.0"
+blender_version_max = "5.0.0"
 
 # License conforming to https://spdx.org/licenses/ (use "SPDX: prefix)
 # https://docs.blender.org/manual/en/dev/advanced/extensions/licenses.html
