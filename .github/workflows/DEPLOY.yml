@@ -28,6 +28,9 @@ jobs:
           EXT_ID=$(grep -E '^id\s*=' "${{ vars.EXTENSION_SRC }}/blender_manifest.toml" \
               | sed -E 's/^id\s*=\s*"(.*)"/\1/' \
               | tr -d '\r\n')
+          BLENDER_MIN_VERSION=$(grep -E '^blender_version_min\s*=' "${{ vars.EXTENSION_SRC }}/blender_manifest.toml" \
+              | sed -E 's/^blender_version_min\s*=\s*"(.*)"/\1/' \
+              | tr -d '\r\n')
 
           ZIP_NAME="$EXT_ID-$EXT_VERSION.zip"
           COMMIT_HASH=$(git rev-parse --short HEAD)
@@ -49,6 +52,7 @@ jobs:
           echo "commit_hash=$COMMIT_HASH" >> $GITHUB_ENV
           echo "release_tag_name=$RELEASE_TAG_NAME" >> $GITHUB_ENV
           echo "sha256=$SHA256" >> $GITHUB_ENV
+          echo "blender_min_version=$BLENDER_MIN_VERSION" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -60,6 +64,7 @@ jobs:
             🔖 Commit: `${{ env.commit_hash }}`
 
             **SHA-256 checksum:** `${{ env.sha256 }}`
+            🧱 Recommended Blender version >= **${{ env.blender_min_version }}**
 
           draft: false
           prerelease: false
