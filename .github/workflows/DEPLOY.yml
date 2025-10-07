@@ -35,22 +35,25 @@ jobs:
           ZIP_NAME="$EXT_ID-$EXT_VERSION.zip"
           COMMIT_HASH=$(git rev-parse --short HEAD)
           RELEASE_TAG_NAME="v${EXT_VERSION}"
+          RELEASE_NAME="$RELEASE_TAG_NAME - Blender $BLENDER_MIN_VERSION+"
 
           zip -r "$ZIP_NAME" ${{ vars.EXTENSION_SRC }}
 
           SHA256=$(sha256sum "$ZIP_NAME" | awk '{ print $1 }')
 
-          echo "Got version: $EXT_VERSION"
-          echo "Got id: $EXT_ID"
+          echo "Version: $EXT_VERSION"
+          echo "ID: $EXT_ID"
           echo "Packaged as: $ZIP_NAME"
           echo "SHA256: $SHA256"
           echo "TAG: $RELEASE_TAG_NAME"
+          echo "Release name: $RELEASE_NAME"
           
           echo "ext_version=$EXT_VERSION" >> $GITHUB_ENV
           echo "ext_id=$EXT_ID" >> $GITHUB_ENV
           echo "ext_zip_name=$ZIP_NAME" >> $GITHUB_ENV
           echo "commit_hash=$COMMIT_HASH" >> $GITHUB_ENV
           echo "release_tag_name=$RELEASE_TAG_NAME" >> $GITHUB_ENV
+          echo "release_name=$RELEASE_NAME" >> $GITHUB_ENV
           echo "sha256=$SHA256" >> $GITHUB_ENV
           echo "blender_min_version=$BLENDER_MIN_VERSION" >> $GITHUB_ENV
 
