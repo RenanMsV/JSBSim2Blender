@@ -17,9 +17,9 @@
 # ##### END GPL LICENSE BLOCK #####
 
 from bpy.utils import register_class, unregister_class
-from bpy_extras.io_utils import ImportHelper
-from bpy.types import Operator, TOPBAR_MT_file_import
 from bpy.props import StringProperty, FloatProperty, BoolProperty
+from bpy.types import Operator, TOPBAR_MT_file_import
+from bpy_extras.io_utils import ImportHelper
 
 from .jsbsim import JSBSim
 
@@ -35,6 +35,9 @@ class ImportJSBSim(Operator, ImportHelper):
         default='*.xml',        # noqa: F722
         options={'HIDDEN'}      # noqa: F821
     )  # type: ignore
+
+    jsb_instance = None
+    filepath = ''
 
     # Per import settings
     plot_scale: FloatProperty(
@@ -93,7 +96,7 @@ class ImportJSBSim(Operator, ImportHelper):
         default=True
     )  # type: ignore
 
-    def draw(self, context):
+    def draw(self, _context):
         layout = self.layout
         layout.use_property_split = True
 
@@ -136,7 +139,7 @@ class ImportJSBSim(Operator, ImportHelper):
         for panel_id, label, props in panels:
             draw_props_panel(panel_id, label, props)
 
-    def execute(self, context):
+    def execute(self, _context):
         if not self.filepath or not self.filepath.lower().endswith('.xml'):
             self.report({'ERROR'}, 'Please select a valid XML file')
             return {'CANCELLED'}
@@ -151,11 +154,11 @@ class ImportJSBSim(Operator, ImportHelper):
             'include_external_reactions': self.include_external_reactions,
             'include_propulsion': self.include_propulsion
         }
-        self.jsbInstance = JSBSim(self.filepath, **settings)  # init import operator
+        self.jsb_instance = JSBSim(self.filepath, **settings)  # init import operator
         return {'FINISHED'}
 
 
-def menu_func_import(self, context):
+def menu_func_import(self, _context):
     self.layout.operator(
         ImportJSBSim.bl_idname,
         text='JSBSim Flight Dynamics Model (.xml)'

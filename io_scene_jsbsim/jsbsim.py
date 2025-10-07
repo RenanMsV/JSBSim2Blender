@@ -16,10 +16,10 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy
-import xml.etree.ElementTree as ET
 from os import path
 import time
+import xml.etree.ElementTree as ET
+import bpy
 
 
 class JSBSim:
@@ -108,10 +108,9 @@ class JSBSim:
             name = f'JSBSim - [{self.filename} ({index})]'
             if find_children(name, children):
                 continue
-            else:
-                target_collection_name = name
-                unique_id = f'[{self.filename} ({index})]'
-                break
+            target_collection_name = name
+            unique_id = f'[{self.filename} ({index})]'
+            break
         new_collection = bpy.data.collections.new(target_collection_name)
         scene_collection.children.link(new_collection)
         return unique_id, new_collection
@@ -125,10 +124,9 @@ class JSBSim:
                 break
         if target_collection is not None:
             return target_collection
-        else:
-            new_collection = bpy.data.collections.new(target_collection_name)
-            self.collection.children.link(new_collection)
-            return new_collection
+        new_collection = bpy.data.collections.new(target_collection_name)
+        self.collection.children.link(new_collection)
+        return new_collection
 
     def get_xyz(self, element):
         x = float(element.find('x').text.strip())
@@ -173,10 +171,10 @@ class JSBSim:
             print('JSBSim warning: Missing tag [', tag_name, ']')
         return tag
 
-    def set_object_parent(self, object, parent_object, keep_global_transform=False):
-        object.parent = parent_object
+    def set_object_parent(self, obj, parent_obj, keep_global_transform=False):
+        obj.parent = parent_obj
         if keep_global_transform:
-            object.matrix_parent_inverse = parent_object.matrix_world.inverted()
+            obj.matrix_parent_inverse = parent_obj.matrix_world.inverted()
 
     def begin_parsing(self):
         if self.include_metrics:
@@ -291,8 +289,8 @@ class JSBSim:
                 )
                 if self.thrs_auto_parent:
                     self.set_object_parent(
-                        object=thruster_object,
-                        parent_object=engine_object,
+                        obj=thruster_object,
+                        parent_obj=engine_object,
                         keep_global_transform=True
                     )
         # Draw fuel tanks
