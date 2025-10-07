@@ -61,7 +61,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.release_tag_name }}
-          name: "Release ${{ env.release_tag_name }}"
+          name: "${{ env.release_name }}"
           body: |
             🚀 Automatic release for version **${{ env.ext_version }}**
             🔖 Commit: `${{ env.commit_hash }}`
