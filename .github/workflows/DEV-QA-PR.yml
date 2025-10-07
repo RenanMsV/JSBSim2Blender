@@ -1,0 +1,177 @@
+name: DEV/QA PR # Lint then Test on Pull Requests
+
+on:
+  workflow_dispatch:   # allows manual trigger
+  pull_request:
+    branches:
+      - main           # runs on PRs targeting main
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    environment: DEV
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint
+
+      - run: flake8 . --config setup.cfg
+      - run: pylint --rcfile setup.cfg .
+  qa:
+    strategy:
+      matrix:
+        blender_version: ['4.2.0', '4.5.3']
+
+    runs-on: ubuntu-latest
+    environment: QA
+    needs: dev
+
+    steps:
+      - name: Detect if running locally
+        id: detect_env
+        run: |
+          if [ "$GITHUB_ACTIONS" = "true" ] && [ -z "$ACT" ]; then
+            echo "is_github=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_github=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Cache Blender
+        id: blender-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender
+          key: blender-${{ matrix.blender_version }}-linux
+          restore-keys: |
+            blender-${{ matrix.blender_version }}-linux
+
+      - name: Set Blender env. vars
+        run: |
+          BLENDER_TEMP=${{ runner.temp }}/blender
+          BLENDER_TAR=blender-${{ matrix.blender_version }}-linux-x64.tar.xz
+          BLENDER_PATH=$BLENDER_TEMP/blender-${{ matrix.blender_version }}-linux-x64
+          echo "BLENDER_TEMP=$BLENDER_TEMP" >> $GITHUB_ENV
+          echo "BLENDER_TAR=$BLENDER_TAR" >> $GITHUB_ENV
+          echo "BLENDER_PATH=$BLENDER_PATH" >> $GITHUB_ENV
+
+      - name: Download Blender ${{ matrix.blender_version }}
+        if: ${{ steps.blender-cache.outputs.cache-hit != 'true' }}
+        run: |
+          set -e
+          mkdir -p $BLENDER_TEMP
+          major_minor=$(echo "${{ matrix.blender_version }}" | cut -d. -f1-2)
+          # Try downloading from each mirror
+          urls=(
+            "https://download.blender.org/release/Blender${major_minor}/$BLENDER_TAR"
+            "https://mirror.clarkson.edu/blender/release/Blender${major_minor}/$BLENDER_TAR"
+            "https://ftp.nluug.nl/pub/graphics/blender/release/Blender${major_minor}/$BLENDER_TAR"
+          )
+          for url in "${urls[@]}"; do
+            if wget -q --tries=2 --timeout=10 "$url" -O $BLENDER_TEMP/$BLENDER_TAR; then
+              echo "Downloaded Blender from $url"
+              break
+            fi
+          done
+          if [ ! -f $BLENDER_TEMP/$BLENDER_TAR ]; then
+            echo "❌ Failed to download Blender from all mirrors"
+            exit 1
+          fi
+          # Extract and delete TAR
+          tar -xf $BLENDER_TEMP/$BLENDER_TAR -C $BLENDER_TEMP
+          echo "Extracted to $BLENDER_TEMP"/
+          rm $BLENDER_TEMP/$BLENDER_TAR
+          # Set Blender in PATH
+          echo "$BLENDER_PATH" >> $GITHUB_PATH
+
+      - name: Install Blender system dependencies
+        if: ${{ steps.detect_env.outputs.is_github == 'false' }}
+        run: |
+          echo "Installing Blender system dependencies..."
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y \
+            libx11-xcb1 \
+            libxfixes3 \
+            libxi6 \
+            libxrender1 \
+            libxrandr2 \
+            libxinerama1 \
+            libxkbcommon0 \
+            libgl1-mesa-glx \
+            libglew2.2 \
+            libsndfile1 \
+            libjpeg-dev \
+            libpng-dev \
+            libtiff5 \
+            libxcursor1
+      
+      - name: Test Blender installed
+        run: blender -v
+
+      - name: Read manifest and package extension
+        run: |
+          EXT_VERSION=$(grep -E '^version\s*=' ${{ vars.EXTENSION_SRC }}/blender_manifest.toml \
+              | sed -E 's/^version\s*=\s*"(.*)"/\1/' \
+              | tr -d '\r\n')
+          EXT_ID=$(grep -E '^id\s*=' "${{ vars.EXTENSION_SRC }}/blender_manifest.toml" \
+              | sed -E 's/^id\s*=\s*"(.*)"/\1/' \
+              | tr -d '\r\n')
+
+          ZIP_NAME="$EXT_ID-$EXT_VERSION.zip"
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+
+          zip -r "$ZIP_NAME" ${{ vars.EXTENSION_SRC }}
+
+          SHA256=$(sha256sum "$ZIP_NAME" | awk '{ print $1 }')
+
+          echo
+          echo "Got version: $EXT_VERSION"
+          echo "Got id: $EXT_ID"
+          echo "Packaged as: $ZIP_NAME"
+          echo "SHA256: $SHA256"
+          echo "Commit: $COMMIT_HASH"
+          echo
+          
+          echo "ext_version=$EXT_VERSION" >> $GITHUB_ENV
+          echo "ext_id=$EXT_ID" >> $GITHUB_ENV
+          echo "ext_zip_name=$ZIP_NAME" >> $GITHUB_ENV
+          echo "commit_hash=$COMMIT_HASH" >> $GITHUB_ENV
+          echo "sha256=$SHA256" >> $GITHUB_ENV
+
+      - name: Install packaged extension in Blender
+        run: |
+          if [ ! -f "./$ext_zip_name" ]; then
+            echo "❌ Extension zip file not found"
+            exit 2
+          fi
+          blender --command extension install-file -r user_default --enable "./$ext_zip_name"
+
+      - name: Find Python[Blender] path
+        run: |
+          PYTHON_PATH=$(blender -b --python-expr "import sys; print(sys.executable)" | grep python | head -n 1)
+          echo "Blender Python path is: $PYTHON_PATH"
+          echo "PYTHON_PATH=$PYTHON_PATH" >> $GITHUB_ENV
+
+      - name: Install Python[Blender] requirements
+        run: |
+          $PYTHON_PATH -m pip install --upgrade pip
+          $PYTHON_PATH -m pip install pytest
+
+      - name: Download required files for testing
+        run: |
+          curl -L "https://raw.githubusercontent.com/FGMEMBERS/c172p/289ba9d309579eec50aef1598ddbb8de72ac0d2e/c172p.xml" -o tests/c172p.xml
+
+      - name: Run Pytest in Python[Blender]
+        run: blender -b --python-expr "import pytest, sys, os; sys.exit(pytest.main(['-sv', os.path.join(os.environ.get('PWD', os.getcwd()), 'tests')]))"
