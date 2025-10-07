@@ -1,0 +1,29 @@
+name: DEV # Lint on Pushes
+
+on:
+  workflow_dispatch:   # allows manual trigger
+  push:
+    branches-ignore:
+      - main           # will trigger on all branches except main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: DEV
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint
+
+      - run: flake8 . --config setup.cfg
+      - run: pylint --rcfile setup.cfg .

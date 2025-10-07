@@ -19,23 +19,25 @@ To maintain consistency across the project, please adhere to the following codin
 
 - **PEP 8 Compliance**: Follow the [PEP 8](https://peps.python.org/pep-0008/) style guide for Python code.
 - **Line Length**: Limit all lines to a maximum of 88 characters.
-- **Linter**: Use [flake8](https://flake8.pycqa.org/en/latest/) to check your code.
+- **Linter**: Use [flake8](https://flake8.pycqa.org/en/latest/) and [pylint](https://github.com/pylint-dev/pylint) to check your code.
 
-### Options for running Flake8
+### Options for running Flake8 and Pylint
 
 **1. Command-line installation (cross-platform):**
 
    ```bash
-   pip install flake8
-   flake8 .
+   pip install flake8 pylint
+   flake8 . --config setup.cfg
+   pylint --rcfile setup.cfg .
    ```
 
 **2. Using VS Code (simplest for most contributors):**
 
 1. Install the [**Python extension**](https://marketplace.visualstudio.com/items?itemName=ms-python.python) by Microsoft in VS Code.
 2. Install the [**Flake8 VS Code extension**](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8) (search for "Flake8" in the Extensions Marketplace).  
-3. Make sure your project virtual environment is selected as the Python interpreter in VS Code.  
-4. Flake8 will automatically highlight PEP 8 violations in the editor as you save files.  
+3. Install the [**Pylint VS Code extension**](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint) (search for "Pylint" in the Extensions Marketplace).  
+4. Make sure your project virtual environment is selected as the Python interpreter in VS Code.  
+5. Flake8 and Pylint will automatically highlight PEP 8 violations in the editor as you save files.  
 
 ---
 

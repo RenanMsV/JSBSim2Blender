@@ -3,3 +3,15 @@
 
 # Zip files
 *.zip
+
+# Github Local Actions
+.input
+.vars
+.secrets
+payload.json
+
+# Tests
+.pytest_cache
+
+# Cache
+*__pycache__
