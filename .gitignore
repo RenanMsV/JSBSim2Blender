@@ -9,3 +9,9 @@
 .vars
 .secrets
 payload.json
+
+# Tests
+.pytest_cache
+
+# Cache
+*__pycache__

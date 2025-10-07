@@ -66,6 +66,7 @@ class JSBSim:
             f'Imported JSBSim FDM from file: {filepath} '
             f'in {self.elapsed_import_ms:.3f} ms'
         )
+        self.import_ok = True
 
     def plot(self, name, position, collection_name, mesh_type='SPHERE'):
         bpy.ops.object.empty_add(type=mesh_type, location=position)
