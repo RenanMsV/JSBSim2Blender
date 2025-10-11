@@ -13,8 +13,8 @@ jobs:
     # Run only if commit message starts with "release:"
     # Or manually run
     if: >
-      ${{ github.event_name == 'workflow_dispatch' ||
-      startsWith(github.event.head_commit.message, 'release:') }}
+      startsWith(github.event.head_commit.message, 'release:') ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
