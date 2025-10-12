@@ -15,3 +15,7 @@ payload.json
 
 # Cache
 *__pycache__
+
+# Assets
+!assets/JSBSim-Feature.zip
+!assets/JSBSim-Icon.zip
