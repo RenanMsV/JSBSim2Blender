@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-10-12
+
+### Added
+
+- Released extension in the [Blender Extensions Platform](https://extensions.blender.org/add-ons/io-scene-jsbsim/).
+
+### Changed
+
+- Removed tags Scene and 3D View as requested by reviewer.
+
 ## [0.2.1] - 2025-10-7
 
 ### Fixed
@@ -58,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Simple positioning the FDM in the 3d space.
 
-[0.2.1]: https://github.com/RenanMsV/JSBSim-Viewer/commit/49670567bec906b7dc28c0c090ef632b046d8526
+[0.2.2]: https://github.com/RenanMsV/JSBSim-Viewer/tree/v0.2.2
+[0.2.1]: https://github.com/RenanMsV/JSBSim-Viewer/tree/v0.2.1
 [0.2.0]: https://github.com/RenanMsV/JSBSim-Viewer/commit/5ed7959eb6f627b37c0deb60ac6677e0fd6cd2b6
-[0.0.2]: https://github.com/RenanMsV/JSBSim2Blender/commit/9303f95b85c4abb27f221778ca98f7f13582effa
-[0.0.1]: https://github.com/RenanMsV/JSBSim2Blender/commit/df693a79b0f574d53223c96d7aedac87fdd2c71f
+[0.0.2]: https://github.com/RenanMsV/JSBSim-Viewer/tree/4.2-legacy
+[0.0.1]: https://github.com/RenanMsV/JSBSim-Viewer/tree/2.8.0
