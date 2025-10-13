@@ -81,7 +81,6 @@ jobs:
           # Send request and capture response + HTTP code
           RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BLENDER_API_URL" \
             -H "Authorization:bearer ${{ secrets.BLENDER_EXTENSIONS_TOKEN }}" \
-            -H "Referer:$BLENDER_REFERER_URL" \
             -F "version_file=@$ext_zip_name" \
             -F "release_notes=$RELEASE_NOTES_ESCAPED")
 
