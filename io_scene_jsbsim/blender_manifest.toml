@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "io_scene_jsbsim"
-version = "0.2.1"
+version = "0.2.2"
 name = "JSBSim Viewer"
 tagline = "Import and visualize JSBSim FDM aircraft XML metrics"
 maintainer = "RenanMsV <r.delaneza@gmail.com>"
