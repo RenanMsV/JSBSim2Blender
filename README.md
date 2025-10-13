@@ -1,7 +1,7 @@
 # JSBSim Viewer
 
 <p align="center">
-  <img src="./branding/JSBSim-Icon.png"
+  <img src="./assets/JSBSim-Icon.png"
   alt="JSBSim Viewer logo" height="120em" />
 </p>
 
@@ -35,10 +35,9 @@ This is useful for:
 ✅ Supports **automatic updates**.  
 ❌ Does not support **automatic updates**.  
 
-
 ## 🚀 Usage
 
 1. In Blender, open **File → Import → JSBSim Flight Dynamics Model (.xml)**.  
 2. Select a JSBSim XML file to import.  
 
-![example.png](./branding/example.png)
+![example.png](./assets/example.png)

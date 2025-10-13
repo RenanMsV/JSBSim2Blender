@@ -60,6 +60,7 @@ jobs:
       - name: Deploy to Blender Extensions Platform API
         env:
           BLENDER_API_URL: https://extensions.blender.org/api/v1/extensions/${{ env.EXT_ID }}/versions/upload/
+          BLENDER_REFERER_URL: https://extensions.blender.org/add-ons/${{ env.EXT_ID }}/
         run: |
           # Extract release notes from CHANGELOG.md
           RELEASE_NOTES=$(awk -v ver="${{ env.ext_version }}" '
@@ -80,6 +81,7 @@ jobs:
           # Send request and capture response + HTTP code
           RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BLENDER_API_URL" \
             -H "Authorization:bearer ${{ secrets.BLENDER_EXTENSIONS_TOKEN }}" \
+            -H "Referer:$BLENDER_REFERER_URL" \
             -F "version_file=@$ext_zip_name" \
             -F "release_notes=$RELEASE_NOTES_ESCAPED")
 
