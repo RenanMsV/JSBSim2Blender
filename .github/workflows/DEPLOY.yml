@@ -57,6 +57,46 @@ jobs:
           echo "sha256=$SHA256" >> $GITHUB_ENV
           echo "blender_min_version=$BLENDER_MIN_VERSION" >> $GITHUB_ENV
 
+      - name: Deploy to Blender Extensions Platform API
+        env:
+          BLENDER_API_URL: https://extensions.blender.org/api/v1/extensions/${{ env.EXT_ID }}/versions/upload/
+        run: |
+          # Extract release notes from CHANGELOG.md
+          RELEASE_NOTES=$(awk -v ver="${{ env.ext_version }}" '
+            $0 ~ "^## \\[" ver "\\]" {capture=1}
+            capture && NR>1 && /^## \[/ && $0 !~ "\\[" ver "\\]" {capture=0}
+            capture
+          ' CHANGELOG.md)
+
+          if [ -z "$RELEASE_NOTES" ]; then
+            echo "Error: Release notes for version ${{ env.ext_version }} not found."
+            exit 1
+          fi
+
+          # Trim trailing spaces and replace newlines with \n
+          RELEASE_NOTES_ESCAPED=$(echo "$RELEASE_NOTES" | sed -e 's/[[:space:]]*$//' | awk '{printf "%s\\n", $0}')
+          RELEASE_NOTES_ESCAPED=${RELEASE_NOTES_ESCAPED%\\n}
+
+          # Send request and capture response + HTTP code
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BLENDER_API_URL" \
+            -H "Authorization:bearer ${{ secrets.BLENDER_EXTENSIONS_TOKEN }}" \
+            -F "version_file=@$ext_zip_name" \
+            -F "release_notes=$RELEASE_NOTES_ESCAPED")
+
+          # Split response body and HTTP code
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1 | sed 's/HTTP_STATUS://')
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Blender Extensions Platform API response:"
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response Body: $BODY"
+
+          # Optional: fail the step if HTTP code is not 2xx
+          if [[ "$HTTP_CODE" -lt 200 || "$HTTP_CODE" -ge 300 ]]; then
+            echo "Error: Request failed with status $HTTP_CODE"
+            exit 1
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -75,25 +115,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # # Steps below require acceptance to the Blender Extensions platform.
-      # # Once accepted they can be enabled to run
-      # - name: Get release notes
-      #   id: get_release_notes
-      #   run: |
-      #     release_notes=$(gh release view ${{ env.release_tag_name }} --json body --jq '.body' | sed -n '/\*\*SHA-256 checksum:\*\*/,$p' | tail -n +2)
-          
-      #     echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-      #     echo "$release_notes" >> $GITHUB_ENV
-      #     echo "EOF" >> $GITHUB_ENV
-
-      #     echo "$release_notes"
-      #   env:
-      #     GH_TOKEN: ${{ github.token }}
-    
-      # - name: Deploy to Blender Extensions Platform
-      #   run: |
-      #     curl -X POST https://extensions.blender.org/api/v1/extensions/${{ env.EXT_ID }}/versions/upload/ \
-      #       -H "Authorization:bearer ${{ secrets.BLENDER_EXTENSIONS_TOKEN }}" \
-      #       -F "version_file=@$ZIP_NAME" \
-      #       --form-string "release_notes=${{ env.RELEASE_NOTES }}"
