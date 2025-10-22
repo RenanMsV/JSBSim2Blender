@@ -31,9 +31,9 @@ This is useful for:
 3. Click **Install from disk…**, select the downloaded `.zip` file, and confirm.
 4. In the Add-ons list, search for and enable **JSBSim Viewer** by checking the box.
 
-⭐ Recommended method of installation.  
-✅ Supports **automatic updates**.  
-❌ Does not support **automatic updates**.  
+<small>⭐ Recommended method of installation.</small>  
+<small>✅ Supports **automatic updates**.</small>  
+<small>❌ Does not support **automatic updates**.</small>  
 
 ## 🚀 Usage
 
